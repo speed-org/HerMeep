@@ -3,11 +3,14 @@ from ollama import chat, Message  # pyright: ignore[reportUnknownVariableType]  
 from typing import Any
 
 from src.config import Config
-from src.schemes.generate import GenerateRequest
+from src.core.schemes.generate import GenerateRequest, InjectRequest
 from src.constants import SYSTEM_PROMPT, APP_ROLE
+from src.core.factories.cache_factory import CacheFactory
+from src.constants import CACHE_TYPE
+from src.core.utils.api_helpers import generate_schema_from_request
 
 llm_bp = Blueprint('llm', __name__, url_prefix='/llm')
-
+_cache = CacheFactory().get_instance(CACHE_TYPE.LOCAL)
 
 @llm_bp.route('/status')
 def llm_status():
@@ -15,8 +18,7 @@ def llm_status():
 
 @llm_bp.route('/generate', methods=['POST'])
 def generate_translation() -> Any:
-    req_data = request.get_json()
-    data = GenerateRequest(**req_data)
+    data = generate_schema_from_request(request, Schema=GenerateRequest)
 
     messages = [
         Message(role=APP_ROLE.SYSTEM, content=SYSTEM_PROMPT),
@@ -29,4 +31,9 @@ def generate_translation() -> Any:
 
 @llm_bp.route("/inject", methods=["POST"])
 def inject_context() -> Response:
-    return make_response({}, 200)
+    data = generate_schema_from_request(request, Schema=InjectRequest)
+
+
+    _cache.set_cache(data.userAlias, data.context)
+
+    return make_response({"newCache":_cache.get_cache(data.userAlias)}, 200)
