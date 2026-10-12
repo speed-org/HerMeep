@@ -8,8 +8,8 @@ class LocalCache(CacheABC):
     def set_cache(self, key:str, value: str):
         self._cache[key] = value
 
-    def get_cache(self, key: str) -> str:
-        return self._cache[key]
+    def get_cache(self, key: str) -> str | None:
+        return self._cache[key] if key in self._cache else None
 
 _instance = LocalCache()
 
