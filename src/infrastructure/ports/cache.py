@@ -6,5 +6,5 @@ class CacheABC(ABC):
         ...
 
     @abstractmethod
-    def get_cache(self, key: str) -> str:
+    def get_cache(self, key: str) -> str | None:
         ...
